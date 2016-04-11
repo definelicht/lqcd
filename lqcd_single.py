@@ -1,3 +1,6 @@
+# \author Johannes de Fine Licht (johannes@musicmedia.dk)
+# \date April 2016
+#
 # Adapted from:
 #  G. Peter Lepage: Lattice QCD for Novices
 #  Proceedings of HUGS 98, edited by J.L. Goity, World Scientific (2000)
@@ -29,7 +32,7 @@ class HarmonicOscillator:
     for i in range(self.x.size):
       posOld = self.x[i]
       valOld = self.compute_value(i)
-      self.x[i] = self.x[i] + np.random.uniform(-eps, eps)
+      self.x[i] = self.x[i] + np.random.uniform(-self.eps, self.eps)
       diff = self.compute_value(i) - valOld
       # TODO: builtin exp is faster than numpy on scalars. Switch to numpy when
       # vectorizing.
@@ -44,32 +47,27 @@ class HarmonicOscillator:
     for _ in range(factor):
       self.run()
 
-def run_montecarlo(osc, nRuns):
-  g = np.zeros((nRuns, osc.length), dtype=osc.dtype)
-  osc.reset()
-  osc.thermalize()
-  for i in range(nRuns):
-    osc.run()
-    accumulate_g(g[i], osc.x)
-  g *= 1. / osc.length
-  return g
-
 def accumulate_g(g, x):
   size = x.size
   for dist in range(size):
     for i in range(size):
       g[dist] += x[i] * x[(i+dist) % size]
 
+def run_montecarlo(nRuns, length=20, nCor=20, a=0.5, eps=1.4, dtype=float):
+  osc = HarmonicOscillator(length, nCor, a, eps, dtype)
+  gAvg = np.zeros(osc.length, dtype=osc.dtype)
+  osc.reset()
+  osc.thermalize()
+  for i in range(nRuns):
+    osc.run()
+    accumulate_g(gAvg, osc.x)
+  gAvg *= 1. / (osc.length * nRuns)
+  return gAvg
+
 if __name__ == "__main__":
-  # Parameters
-  length = 20
-  nCor = 20
-  nRuns = 1000
-  a = 0.5
-  eps = 1.4
-  # Simulation
-  osc = HarmonicOscillator(20, 20, 0.5, 1.4)
-  g = run_montecarlo(osc, 1000)
-  # Print result
-  print('Average G:\n', np.average(g, axis=0))
-  sys.exit(0)
+  if len(sys.argv) < 2:
+    print("Usage: <number of runs>")
+    sys.exit(1)
+  nRuns = int(sys.argv[1])
+  gAvg = run_montecarlo(nRuns)
+  print('Average G:\n', gAvg)
