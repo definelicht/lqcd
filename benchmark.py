@@ -2,12 +2,10 @@ import csv, multiprocessing, sys, time
 import lqcd_batch, lqcd_single
 
 warmup = 1
-measurements = 5
-nRuns = [16, 32]
-batchSizes = [2, 4]
-# nRuns = [2**x for x in range(5, 17)]
-# batchSizes = [2**x for x in range(1, 14)]
-highestRatio = 2**8
+measurements = 10
+nRuns = [2**x for x in range(5, 17)]
+batchSizes = [2**x for x in range(1, 14)]
+highestRatio = 2**10
 
 def do_run(conf):
   (n, b, reps) = conf
