@@ -7,7 +7,7 @@
 #  arXiv:hep-lat/0506036
 
 import numpy as np
-import math, sys
+import math, sys, time
 
 class HarmonicOscillator:
 
@@ -57,17 +57,24 @@ def run_montecarlo(nRuns, length=20, nCor=20, a=0.5, eps=1.4, dtype=float):
   osc = HarmonicOscillator(length, nCor, a, eps, dtype)
   gAvg = np.zeros(osc.length, dtype=osc.dtype)
   osc.reset()
+  start = time.time()
   osc.thermalize()
+  startCompute = time.time()
   for i in range(nRuns):
     osc.run()
     accumulate_g(gAvg, osc.x)
+  stop = time.time()
+  timeCompute = stop - startCompute
+  timeTotal = stop - start
   gAvg *= 1. / (osc.length * nRuns)
-  return gAvg
+  return gAvg, timeCompute, timeTotal
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:
     print("Usage: <number of runs>")
     sys.exit(1)
   nRuns = int(sys.argv[1])
-  gAvg = run_montecarlo(nRuns)
+  gAvg, timeCompute, timeTotal = run_montecarlo(nRuns)
+  print("Finished in {.4f} seconds ({.4f} seconds without thermalization).".format(
+      timeTotal, timeCompute))
   print('Average G:\n', gAvg)

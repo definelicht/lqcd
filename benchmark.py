@@ -1,45 +1,39 @@
-import json, time
+import csv, time
 import lqcd_batch, lqcd_single
 
-warmup = 3
-measurements = 3
-nRuns = [100, 200, 500, 1000, 2000, 5000, 10000]
-batchSizes = list(nRuns)
+warmup = 1
+measurements = 5
+nRuns = [2**x for x in range(5, 17)]
+batchSizes = [2**x for x in range(1, 14)]
+highestRatio = 2**8
 
-results = {"batch": {}, "sequential": {}}
-for b in batchSizes:
-  results["batch"][str(b)] = {}
+results = []
 for n in nRuns:
   print("-- {} runs".format(n))
-  print("  Running sequential")
-  print("    Warmup runs...")
-  for _ in range(warmup):
-    lqcd_single.run_montecarlo(n)
-  results["sequential"][str(n)] = []
-  for i in range(measurements):
-    tBegin = time.time()
-    lqcd_single.run_montecarlo(n)
-    tElapsed = time.time() - tBegin
-    print("    Run {} / {}: {} seconds".format(i+1, measurements, tElapsed))
-    results["sequential"][str(n)].append(tElapsed)
-    # outFile.write("sequential,{},,{}\n".format(n, tElapsed))
+  if n < 2**11:
+    print("  Running sequential")
+    print("    Warmup runs...")
+    for _ in range(warmup):
+      lqcd_single.run_montecarlo(n)
+    for i in range(measurements):
+      _, timeCompute, timeTotal = lqcd_single.run_montecarlo(n)
+      print("    Run {} / {}: {:.4f}/{:.4f} seconds".format(
+          i+1, measurements, timeCompute, timeTotal))
+      results.append((n, "1", timeCompute, timeTotal))
   print("  Running in batches")
-  results["batch"][str(n)] = {}
-  for b in [x for x in batchSizes if n % x == 0]:
+  for b in [x for x in batchSizes if n % x == 0 and n / x <= highestRatio]:
     print("    Batch size {}".format(b))
     print("      Warmup runs...")
     for _ in range(warmup):
       lqcd_batch.run_montecarlo(b, int(n/b))
-    results["batch"][str(b)][str(n)] = []
     for i in range(measurements):
-      tBegin = time.time()
-      lqcd_batch.run_montecarlo(b, int(n/b))
-      tElapsed = time.time() - tBegin
-      print("      Run {} / {}: {} seconds".format(i+1, measurements,
-                                                   tElapsed))
-      results["batch"][str(b)][str(n)].append(tElapsed)
-      # outFile.write("batch,{},{},{}\n".format(n, b, tElapsed))
+      _, timeCompute, timeTotal = lqcd_batch.run_montecarlo(b, int(n/b))
+      print("      Run {} / {}: {:.4f}/{:.4f} seconds".format(
+          i+1, measurements, timeCompute, timeTotal))
+      results.append((n, b, timeCompute, timeTotal))
 
-serialized = json.dumps(results)
-with open("benchmark.json", "w") as outFile:
-  outFile.write(serialized)
+with open("benchmark.csv", "w") as outFile:
+  writeCsv = csv.writer(outFile)
+  writeCsv.writerow(("nRuns", "batchSize", "timeCompute", "timeTotal"))
+  for r in results:
+    writeCsv.writerow(r)
