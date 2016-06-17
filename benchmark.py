@@ -11,6 +11,7 @@ def do_run(conf):
   (n, b, reps) = conf
   ret = []
   print("Running {}/{}...".format(n, b))
+  start = time.time()
   if n == 1:
     for _ in range(warmup):
       lqcd_single.run_montecarlo(n)
@@ -23,7 +24,7 @@ def do_run(conf):
     for _ in range(reps):
       _, timeCompute, timeTotal = lqcd_batch.run_montecarlo(n, int(n/b))
       ret.append((n, b, timeCompute, timeTotal))
-  print("Finished {}/{}.".format(n, b))
+  print("Finished {}/{} in {} seconds.".format(n, b, time.time() - start))
   return ret
 
 pool = multiprocessing.Pool(int(sys.argv[1]))
