@@ -39,7 +39,7 @@ class HarmonicOscillator:
   def reset(self):
     self.x[:, :] = 0
 
-  def __compute_value(self, i, dst):
+  def __evaluate_action(self, i, dst):
     dst[:] = (self.factor0 * self.x[i, :]**2 +
               self.factor1 * self.x[i, :] * (self.x[i, :] - self.x[i-1, :] -
                                              self.x[(i+1) % self.length, :]))
@@ -64,9 +64,9 @@ class HarmonicOscillator:
   def sweep(self):
     for i in range(self.x.shape[0]):
       self.xBuffer[:] = self.x[i, :]
-      self.__compute_value(i, self.valBuffer)
+      self.__evaluate_action(i, self.valBuffer)
       self.x[i, :] += self.__rand(-self.eps, self.eps)
-      self.__compute_value(i, self.diffBuffer)
+      self.__evaluate_action(i, self.diffBuffer)
       self.diffBuffer -= self.valBuffer
       self.undoBuffer[:] = self.diffBuffer > 0
       self.diffBuffer[self.undoBuffer] = -self.diffBuffer[self.undoBuffer]

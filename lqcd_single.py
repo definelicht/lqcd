@@ -23,7 +23,7 @@ class HarmonicOscillator:
   def reset(self):
     self.x[:] = 0
 
-  def compute_value(self, i):
+  def __evaluate_action(self, i):
     return (self.factor0*self.x[i]**2 +
             self.factor1*self.x[i]*(self.x[i] - self.x[i-1] -
                                     self.x[(i+1) % self.length]))
@@ -31,11 +31,9 @@ class HarmonicOscillator:
   def sweep(self):
     for i in range(self.x.size):
       posOld = self.x[i]
-      valOld = self.compute_value(i)
+      valOld = self.__evaluate_action(i)
       self.x[i] = self.x[i] + np.random.uniform(-self.eps, self.eps)
-      diff = self.compute_value(i) - valOld
-      # TODO: builtin exp is faster than numpy on scalars. Switch to numpy when
-      # vectorizing.
+      diff = self.__evaluate_action(i) - valOld
       if diff > 0 and math.exp(-diff) < np.random.uniform():
         self.x[i] = posOld
 
