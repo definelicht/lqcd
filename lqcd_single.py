@@ -73,6 +73,6 @@ if __name__ == "__main__":
     sys.exit(1)
   nRuns = int(sys.argv[1])
   gAvg, timeCompute, timeTotal = run_montecarlo(nRuns)
-  print("Finished in {.4f} seconds ({.4f} seconds without thermalization).".format(
-      timeTotal, timeCompute))
-  print('Average G:\n', gAvg)
+  print("Finished in {:.4f} seconds ({:.4f} including thermalization).".format(
+       timeCompute, timeTotal))
+  print("Resulting expectation values:\n", gAvg)
