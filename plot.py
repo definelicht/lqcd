@@ -12,6 +12,7 @@ def filter_data(data):
 def set_style():
   plt.style.use('ggplot')
   plt.rcParams.update({'font.size': 16})
+  plt.rc("text", usetex=True)
 
 def plot_strong(data, includeThermalize=False):
 
@@ -24,7 +25,7 @@ def plot_strong(data, includeThermalize=False):
   ax.set_yscale("log")
   ax.set_xlabel("Number of Monte Carlo measurements [1]")
   if not includeThermalize:
-    ax.set_ylabel("Time excluding thermalization [s]")
+    ax.set_ylabel("Time [s]")
   else:
     ax.set_ylabel("Time including thermalization [s]")
   time = (data["1"]["timeCompute"] if not includeThermalize
@@ -44,7 +45,7 @@ def plot_strong(data, includeThermalize=False):
                 label="Batch size {}".format(b),
                 marker="+" if i >= 6 else "o", markersize=15 if i >= 6 else 10,
                 linewidth=2, markeredgewidth=2)
-  ax.legend(loc=4, frameon=False, fontsize=15, ncol=2)
+  ax.legend(loc=2, frameon=False, fontsize=15, ncol=2)
   ax.set_xlim([0.9*ax.get_xlim()[0], ax.get_xlim()[1]*1.1])
   ax.set_ylim([0.9*ax.get_ylim()[0], ax.get_ylim()[1]*1.1])
 
@@ -80,17 +81,9 @@ def plot_strong_single(data, nRuns):
   ax.set_title("{} measurements".format(nRuns))
   ax.errorbar(nBatches, timeCompute, timeComputeErr, linewidth=2,
               marker="o", markersize=15, markerfacecolor="None",
-              label="Without thermalization",
               color="red",
               markeredgecolor="red",
               markeredgewidth=2)
-  ax.errorbar(nBatches, timeTotal, timeTotalErr, linewidth=2,
-              marker="o", markersize=15, markerfacecolor="None",
-              label="With thermalization",
-              color="blue",
-              markeredgecolor="blue",
-              markeredgewidth=2)
-  ax.legend()
   ax.set_xlim([0.9*ax.get_xlim()[0], ax.get_xlim()[1]*1.1])
   ax.set_ylim([0.9*ax.get_ylim()[0], ax.get_ylim()[1]*1.1])
   return fig
@@ -130,21 +123,13 @@ def plot_weak(data):
   fig, ax = plt.subplots()
   ax.set_xscale("log", basex=2)
   ax.set_yscale("log", basey=2)
-  ax.set_xlabel("Batch size")
+  ax.set_xlabel("Number of measurements (fixed number of batches) [1]")
   ax.set_ylabel("Time per element [s/1]")
-  ax.errorbar(batchSize, timeCompute, timeComputeErr, linewidth=2,
+  ax.errorbar(nRuns, timeCompute, timeComputeErr, linewidth=2,
               marker="o", markersize=15, markerfacecolor="None",
-              label="Without thermalization",
               color="red",
               markeredgecolor="red",
               markeredgewidth=2)
-  ax.errorbar(batchSize, timeTotal, timeTotalErr, linewidth=2,
-              marker="o", markersize=15, markerfacecolor="None",
-              label="With thermalization",
-              color="blue",
-              markeredgecolor="blue",
-              markeredgewidth=2)
-  ax.legend()
   return fig
 
 if __name__ == "__main__":
@@ -190,7 +175,6 @@ if __name__ == "__main__":
     data[b]["timeComputeErr"] = np.array(timeComputeErr)
     data[b]["timeTotal"] = np.array(timeTotalMean)
     data[b]["timeTotalErr"] = np.array(timeTotalErr)
-
 
   if sys.argv[2] == "strong":
     filter_data(data)
